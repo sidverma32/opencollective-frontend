@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -12,7 +12,6 @@ import StyledCollectiveCard from '../StyledCollectiveCard';
 import StyledTag from '../StyledTag';
 import StyledTooltip from '../StyledTooltip';
 import { P } from '../Text';
-import { withUser } from '../UserProvider';
 
 import RecurringContributionsPopUp from './RecurringContributionsPopUp';
 
@@ -28,10 +27,19 @@ const messages = defineMessages({
   },
 });
 
-const RecurringContributionsCard = ({ collective, status, contribution, account, LoggedInUser, ...props }) => {
-  const [showPopup, setShowPopup] = useState(false);
+const RecurringContributionsCard = ({
+  collective,
+  status,
+  contribution,
+  account,
+  isEditing,
+  canEdit,
+  isAdmin,
+  onCloseEdit,
+  onEdit,
+  ...props
+}) => {
   const { formatMessage } = useIntl();
-  const isAdmin = LoggedInUser && LoggedInUser.canEditCollective(account);
   const isError = status === ORDER_STATUS.ERROR;
   const isRejected = status === ORDER_STATUS.REJECTED;
   const isActive = status === ORDER_STATUS.ACTIVE || isError;
@@ -111,7 +119,8 @@ const RecurringContributionsCard = ({ collective, status, contribution, account,
         {isAdmin && isActive && (
           <StyledButton
             buttonSize="tiny"
-            onClick={() => setShowPopup(true)}
+            onClick={onEdit}
+            disabled={!canEdit}
             data-cy="recurring-contribution-edit-activate-button"
             width="100%"
           >
@@ -119,11 +128,11 @@ const RecurringContributionsCard = ({ collective, status, contribution, account,
           </StyledButton>
         )}
       </Container>
-      {showPopup && (
+      {isEditing && (
         <RecurringContributionsPopUp
           contribution={contribution}
           status={status}
-          setShowPopup={setShowPopup}
+          onCloseEdit={onCloseEdit}
           account={account}
         />
       )}
@@ -133,6 +142,11 @@ const RecurringContributionsCard = ({ collective, status, contribution, account,
 
 RecurringContributionsCard.propTypes = {
   collective: PropTypes.object.isRequired,
+  isEditing: PropTypes.bool,
+  isAdmin: PropTypes.bool,
+  canEdit: PropTypes.bool,
+  onCloseEdit: PropTypes.func,
+  onEdit: PropTypes.func,
   contribution: PropTypes.shape({
     amount: PropTypes.object.isRequired,
     platformContributionAmount: PropTypes.object,
@@ -144,4 +158,4 @@ RecurringContributionsCard.propTypes = {
   account: PropTypes.object.isRequired,
 };
 
-export default withUser(RecurringContributionsCard);
+export default RecurringContributionsCard;
